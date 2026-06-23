@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gomi-Check Hachioji Ultimate</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', メイリオ, sans-serif;
+            text-align: center;
+            background-color: #f0f4f8;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 { margin-bottom: 5px; font-size: 2.4rem; color: #1a2a3a; }
+        .subtitle { color: #555; margin-bottom: 20px; font-size: 1.2rem; font-weight: bold; }
+        
+        /* 言語切り替えボタン */
+        .lang-container { margin-bottom: 20px; }
+        .lang-btn {
+            padding: 10px 24px;
+            margin: 0 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: 3px solid #cbd5e1;
+            background: white;
+            border-radius: 30px;
+            transition: all 0.2s;
+        }
+        .lang-btn.active { background: #1e293b; color: white; border-color: #1e293b; }
+
+        #video-container {
+            position: relative;
+            width: 640px;
+            height: 480px;
+            margin: 0 auto;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+        }
+        video, canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 640px;
+            height: 480px;
+        }
+        
+        /* 高齢者・外国人のための高アクセシビリティ案内ボックス */
+        #info-box {
+            max-width: 620px;
+            margin: 25px auto;
+            padding: 30px;
+            background: #ffffff;
+            border: 6px solid #94a3b8;
+            border-radius: 16px;
+            min-height: 160px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+            transition: border-color 0.3s;
+        }
+        #trash-category {
+            font-size: 2.6rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        #trash-instructions {
+            font-size: 1.8rem;
+            line-height: 1.7;
+            text-align: left;
+            white-space: pre-line;
+            font-weight: bold;
+        }
+        #loading-status {
+            font-size: 1.4rem;
+            color: #ea580c;
+            font-weight: bold;
+            margin-bottom: 15px;
+            background: #ffedd5;
+            padding: 10px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🗑️ Gomi-Check</h1>
+    <p class="subtitle">八王子市版 - 外国人と高齢者のためのゴミ分別アシスタント</p>
+
+    <div class="lang-container">
+        <button class="lang-btn active" onclick="setLanguage('ja')">日本語</button>
+        <button class="lang-btn" onclick="setLanguage('en')">English</button>
+    </div>
+
+    <div id="loading-status">AIモデルを読み込んでいます。少々お待ちください... (Loading AI model...)</div>
+
+    <div id="video-container">
+        <video id="webcam" autoplay muted playsinline></video>
+        <canvas id="overlay"></canvas>
+    </div>
+    
+    <div id="info-box">
+        <div id="trash-category">カメラにゴミを映してください</div>
+        <div id="trash-instructions">ゴミを認識すると、ここに八王子市の詳細な分別ルールが大きな文字で表示されます。</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+    
+    <script>
+        const video = document.getElementById('webcam');
+        const canvas = document.getElementById('overlay');
+        const ctx = canvas.getContext('2d');
+        const statusLabel = document.getElementById('loading-status');
+        const categoryLabel = document.getElementById('trash-category');
+        const instructionsLabel = document.getElementById('trash-instructions');
+        const infoBox = document.getElementById('info-box');
+
+        let currentLang = 'ja';
+        let model;
+
+        // 全ての分別を網羅した八王子市ルールデータベース
+        const hachiojiRules = {
+            // 1. ペットボトル
+            "bottle": {
+                color: "#3b82f6", // 青
+                ja: {
+                    category: "ペットボトル",
+                    text: "① キャップとラベルを必ず外す！\n② 中を軽くすすぐ。\n③ 横方向につぶして出す！\n(※キャップとラベルは「容器包装プラスチック」へ)"
+                },
+                en: {
+                    category: "PET Bottles",
+                    text: "1. Remove cap and label!\n2. Rinse inside lightly.\n3. Crush sideways to flatten!\n(*Caps & labels go to Plastic Packaging)"
+                }
+            },
+            // 2. 空き缶
+            "can": {
+                color: "#22c55e", // 緑
+                ja: {
+                    category: "空き缶",
+                    text: "① 中をサッとすすぐ。\n② 軽くつぶす！\n③ 袋に入れず、そのまま黄色の回収容器（またはネット）へ出す。"
+                },
+                en: {
+                    category: "Empty Cans",
+                    text: "1. Rinse inside cleanly.\n2. Crush lightly!\n3. Do NOT bag them. Put directly into yellow collection bins."
+                }
+            },
+            // 3. 容器包装プラスチック (弁当箱、パックなど)
+            "cup": {
+                color: "#f97316", // オレンジ
+                ja: {
+                    category: "容器包装プラスチック",
+                    text: "① プラマークがあるか確認！\n② 汚れをきれいに洗って落とす。\n③ 透明・半透明の袋に入れて出す。\n※汚れが落ちないものは「可燃ごみ」へ！"
+                },
+                en: {
+                    category: "Plastic Packaging",
+                    text: "1. Check for the 'プラ' plastic mark.\n2. Wash away food residue/dirt.\n3. Put in a transparent or semi-transparent bag.\n*If dirty and unwashable, put in Burnable Waste."
+                }
+            },
+            "bowl": {
+                color: "#f97316",
+                ja: {
+                    category: "容器包装プラスチック",
+                    text: "① プラマークがあるか確認！\n② 汚れをきれいに洗って落とす。\n③ 透明・半透明の袋に入れて出す。\n※汚れが落ちないものは「可燃ごみ」へ！"
+                },
+                en: {
+                    category: "Plastic Packaging",
+                    text: "1. Check for the 'プラ' mark.\n2. Wash away food residue.\n3. Put in a transparent bag.\n*If it cannot be cleaned, it goes to Burnable Waste."
+                }
+            },
+            // 4. 古紙・段ボール
+            "book": {
+                color: "#854d0e", // 茶色
+                ja: {
+                    category: "古紙・段ボール",
+                    text: "① 種類（新聞・雑誌・段ボール・雑がみ）に分ける。\n② ひもで十字に縛って出す。\n※雨の日はなるべく次の収集日に出してください。"
+                },
+                en: {
+                    category: "Paper & Cardboard",
+                    text: "1. Separate by type (Newspaper, Magazine, Cardboard, Mixed).\n2. Tie crosswise with a string.\n*On rainy days, please wait until the next collection day if possible."
+                }
+            },
+            // 5. 可燃ごみ（燃えるゴミ - 食べ物、生ごみ、木製品など）
+            "banana": { color: "#ef4444", ja: { category: "可燃ごみ（燃えるゴミ）", text: "① 八王子市指定の「緑色のゴミ袋」に入れます。\n② 生ごみは十分に水切りをしてください。" }, en: { category: "Burnable Waste", text: "1. Use Hachioji designated GREEN garbage bags.\n2. Drain excess water from food waste thoroughly." } },
+            "apple": { color: "#ef4444", ja: { category: "可燃ごみ（燃えるゴミ）", text: "① 八王子市指定の「緑色のゴミ袋」に入れます。\n② 生ごみは十分に水切りをしてください。" }, en: { category: "Burnable Waste", text: "1. Use Hachioji designated GREEN bags." } },
+            "sandwich": { color: "#ef4444", ja: { category: "可燃ごみ（燃えるゴミ）", text: "① 八王子市指定の「緑色のゴミ袋」に入れます。" }, en: { category: "Burnable Waste", text: "1. Use Hachioji designated GREEN bags." } },
+            "orange": { color: "#ef4444", ja: { category: "可燃ごみ（燃えるゴミ）", text: "① 八王子市指定の「緑色のゴミ袋」に入れます。" }, en: { category: "Burnable Waste", text: "1. Use Hachioji designated GREEN bags." } },
+            "broccoli": { color: "#ef4444", ja: { category: "可燃ごみ（燃えるゴミ）", text: "① 八王子市指定の「緑色のゴミ袋」に入れます。" }, en: { category: "Burnable Waste", text: "1. Use Hachioji designated GREEN bags." } },
+            
+            // 6. 不燃ごみ（燃えないゴミ - 金属、ガラス、小型家電など）
+            "scissors": {
+                color: "#708090", // グレー
+                ja: {
+                    category: "不燃ごみ（燃えないゴミ）",
+                    text: "① 八王子市指定の「橙色（オレンジ）のゴミ袋」に入れます。\n② 刃物などの危険なものは、厚紙などに包んで「キケン」と書いて出してください。"
+                },
+                en: {
+                    category: "Non-Burnable Waste",
+                    text: "1. Use Hachioji designated ORANGE garbage bags.\n2. Wrap sharp items like blades in cardboard and clearly write 'キケン' (Dangerous)."
+                }
+            },
+            "knife": {
+                color: "#708090",
+                ja: {
+                    category: "不燃ごみ（燃えないゴミ）",
+                    text: "① 八王子市指定の「橙色（オレンジ）のゴミ袋」に入れます。\n② 刃物は厚紙などに包んで「キケン」と書いて出してください。"
+                },
+                en: {
+                    category: "Non-Burnable Waste",
+                    text: "1. Use Hachioji designated ORANGE bags.\n2. Wrap blades in cardboard and label it 'キケン'."
+                }
+            },
+            "clock": {
+                color: "#708090",
+                ja: {
+                    category: "不燃ごみ（燃えないゴミ）",
+                    text: "① 八王子市指定の「橙色（オレンジ）のゴミ袋」に入れます。\n※電池は必ず抜いて、電池は「有害ごみ」へ出してください。"
+                },
+                en: {
+                    category: "Non-Burnable Waste",
+                    text: "1. Use Hachioji designated ORANGE bags.\n*Make sure to remove batteries! Batteries go to Hazardous Waste."
+                }
+            }
+        };
+
+        const defaultText = {
+            ja: { cat: "カメラにゴミを映してください", inst: "ゴミを認識すると、ここに八王子市の詳細な分別ルールが大きな文字で表示されます。" },
+            en: { cat: "Show trash to the camera", inst: "Hold any trash item to see Hachioji sorting rules displayed here in large fonts." }
+        };
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            if(event) {
+                event.target.classList.add('active');
+            }
+            resetUI();
+        }
+
+        function resetUI() {
+            categoryLabel.innerText = defaultText[currentLang].cat;
+            instructionsLabel.innerText = defaultText[currentLang].inst;
+            infoBox.style.borderColor = "#94a3b8";
+            categoryLabel.style.color = "#333";
+        }
+
+        async function setupWebcam() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 640, height: 480 },
+                    audio: false
+                });
+                video.srcObject = stream;
+                return new Promise((resolve) => {
+                    video.onloadedmetadata = () => { resolve(video); };
+                });
+            } catch (error) {
+                console.error(error);
+                alert("カメラを起動できませんでした。ブラウザのカメラアクセス権限を許可してください。");
+            }
+        }
+
+        async function detectFrame() {
+            if (!model) return;
+            
+            const predictions = await model.detect(video);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            let detectedRule = null;
+
+            predictions.forEach(prediction => {
+                if (hachiojiRules[prediction.class] && prediction.score > 0.55) {
+                    detectedRule = hachiojiRules[prediction.class];
+                    const [x, y, width, height] = prediction.bbox;
+                    
+                    // 画面に枠線を描画
+                    ctx.strokeStyle = detectedRule.color;
+                    ctx.lineWidth = 6;
+                    ctx.strokeRect(x, y, width, height);
+                }
+            });
+
+            if (detectedRule) {
+                const langData = detectedRule[currentLang];
+                categoryLabel.innerText = langData.category;
+                categoryLabel.style.color = detectedRule.color;
+                instructionsLabel.innerText = langData.text;
+                infoBox.style.borderColor = detectedRule.color;
+            }
+
+            requestAnimationFrame(detectFrame);
+        }
+
+        async function init() {
+            try {
+                model = await cocoSsd.load();
+                statusLabel.style.display = 'none';
+                await setupWebcam();
+                detectFrame();
+            } catch(e) {
+                console.error(e);
+                statusLabel.innerText = "AIモデルの読み込みエラーが発生しました。ネット接続を確認してください。";
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
