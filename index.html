@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gomi-Check Ultimate Matrix + Barcode</title>
+    <title>Gomi-Check Multi-City Matrix</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', メイリオ, sans-serif;
@@ -16,16 +16,37 @@
         h1 { margin-bottom: 5px; font-size: 2.4rem; color: #1a2a3a; }
         .subtitle { color: #555; margin-bottom: 20px; font-size: 1.2rem; font-weight: bold; }
         
-        .lang-container { margin-bottom: 20px; }
+        .control-panel {
+            background: white;
+            max-width: 620px;
+            margin: 0 auto 20px auto;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .select-box {
+            padding: 8px 16px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            border: 2px solid #cbd5e1;
+            background: #f8fafc;
+            cursor: pointer;
+        }
         .lang-btn {
-            padding: 10px 24px;
-            margin: 0 8px;
-            font-size: 1.1rem;
+            padding: 8px 20px;
+            margin: 0 4px;
+            font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
-            border: 3px solid #cbd5e1;
+            border: 2px solid #cbd5e1;
             background: white;
-            border-radius: 30px;
+            border-radius: 20px;
             transition: all 0.2s;
         }
         .lang-btn.active { background: #1e293b; color: white; border-color: #1e293b; }
@@ -57,18 +78,8 @@
             border-radius: 16px;
             box-shadow: 0 6px 16px rgba(0,0,0,0.05);
         }
-        #trash-category {
-            font-size: 2.6rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        #trash-instructions {
-            font-size: 1.6rem;
-            line-height: 1.6;
-            text-align: left;
-            white-space: pre-line;
-            font-weight: bold;
-        }
+        #trash-category { font-size: 2.6rem; font-weight: bold; margin-bottom: 10px; }
+        #trash-instructions { font-size: 1.6rem; line-height: 1.6; text-align: left; white-space: pre-line; font-weight: bold; }
 
         #calendar-box {
             max-width: 620px;
@@ -80,53 +91,34 @@
             box-shadow: 0 8px 24px rgba(0,0,0,0.15);
         }
         #calendar-box h3 { margin: 0 0 15px 0; font-size: 1.5rem; color: #38bdf8; }
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 8px;
-        }
-        .day-card {
-            background: #334155;
-            padding: 10px 5px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: bold;
-        }
-        .day-card.active-collection {
-            background: #059669;
-            border: 2px solid #34d399;
-            transform: scale(1.05);
-        }
+        .calendar-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+        .day-card { background: #334155; padding: 10px 5px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; }
+        .day-card.active-collection { background: #059669; border: 2px solid #34d399; transform: scale(1.05); }
         .day-card .day-name { font-size: 1.1rem; margin-bottom: 5px; color: #94a3b8; }
         .day-card.active-collection .day-name { color: #fff; }
         .day-card .gomi-type { font-size: 0.8rem; color: #cbd5e1; }
 
-        #loading-status {
-            font-size: 1.4rem; color: #ea580c; font-weight: bold; margin-bottom: 15px;
-            background: #ffedd5; padding: 10px; border-radius: 8px; display: inline-block;
-        }
-        
-        /* Barcode Feedback CSS */
-        #barcode-alert {
-            display: none;
-            background: #e0f2fe;
-            color: #0369a1;
-            padding: 10px;
-            border-radius: 8px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            font-size: 1.1rem;
-        }
+        #loading-status { font-size: 1.4rem; color: #ea580c; font-weight: bold; margin-bottom: 15px; background: #ffedd5; padding: 10px; border-radius: 8px; display: inline-block; }
+        #barcode-alert { display: none; background: #e0f2fe; color: #0369a1; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 10px; font-size: 1.1rem; }
     </style>
 </head>
 <body>
 
     <h1>🗑️ Gomi-Check</h1>
-    <p class="subtitle">八王子市版 - AIカメラ ＆ バーコード分別アシスタント</p>
+    <p class="subtitle">AIゴミ＆バーコード分別アシスタント (マルチ都市対応版)</p>
 
-    <div class="lang-container">
-        <button class="lang-btn active" onclick="setLanguage('ja')">日本語</button>
-        <button class="lang-btn" onclick="setLanguage('en')">English</button>
+    <div class="control-panel">
+        <div>
+            <label style="font-weight: bold; margin-right: 5px;">📍 地域を選択 (City):</label>
+            <select id="city-select" class="select-box" onchange="changeCity()">
+                <option value="hachioji">八王子市 (Hachioji)</option>
+                <option value="shinjuku">新宿区 (Shinjuku)</option>
+            </select>
+        </div>
+        <div class="lang-container" style="margin: 0;">
+            <button class="lang-btn active" onclick="setLanguage('ja')">日本語</button>
+            <button class="lang-btn" onclick="setLanguage('en')">English</button>
+        </div>
     </div>
 
     <div id="loading-status">AIシステム＆バーコードリーダーを起動中...</div>
@@ -138,19 +130,19 @@
     </div>
     
     <div id="info-box">
-        <div id="trash-category">カメラにゴミまたはバーコードを映してください</div>
-        <div id="trash-instructions">ゴミをカメラで捉えるか、商品のバーコード線を近づけると自動解析します。</div>
+        <div id="trash-category">カメラにゴミを映してください</div>
+        <div id="trash-instructions">ゴミを認識すると、選択した都市のルールが表示されます。</div>
     </div>
 
     <div id="calendar-box">
-        <h3 id="calendar-title">八王子市 基本収集スケジュール (Weekly Schedule)</h3>
+        <h3 id="calendar-title">収集スケジュール</h3>
         <div class="calendar-grid">
-            <div class="day-card" id="day-Mon"><div class="day-name">月</div><div class="gomi-type" id="txt-Mon">可燃</div></div>
-            <div class="day-card" id="day-Tue"><div class="day-name">火</div><div class="gomi-type" id="txt-Tue">不燃</div></div>
-            <div class="day-card" id="day-Wed"><div class="day-name">水</div><div class="gomi-type" id="txt-Wed">プラ</div></div>
-            <div class="day-card" id="day-Thu"><div class="day-name">木</div><div class="gomi-type" id="txt-Thu">可燃</div></div>
-            <div class="day-card" id="day-Fri"><div class="day-name">金</div><div class="gomi-type" id="txt-Fri">資源/缶</div></div>
-            <div class="day-card" id="day-Sat"><div class="day-name">土</div><div class="gomi-type" id="txt-Sat">ペット</div></div>
+            <div class="day-card" id="day-Mon"><div class="day-name">月</div><div class="gomi-type" id="txt-Mon">-</div></div>
+            <div class="day-card" id="day-Tue"><div class="day-name">火</div><div class="gomi-type" id="txt-Tue">-</div></div>
+            <div class="day-card" id="day-Wed"><div class="day-name">水</div><div class="gomi-type" id="txt-Wed">-</div></div>
+            <div class="day-card" id="day-Thu"><div class="day-name">木</div><div class="gomi-type" id="txt-Thu">-</div></div>
+            <div class="day-card" id="day-Fri"><div class="day-name">金</div><div class="gomi-type" id="txt-Fri">-</div></div>
+            <div class="day-card" id="day-Sat"><div class="day-name">土</div><div class="gomi-type" id="txt-Sat">-</div></div>
         </div>
     </div>
 
@@ -167,73 +159,70 @@
         const instructionsLabel = document.getElementById('trash-instructions');
         const infoBox = document.getElementById('info-box');
         const barcodeAlert = document.getElementById('barcode-alert');
+        const citySelect = document.getElementById('city-select');
 
         let currentLang = 'ja';
+        let currentCity = 'hachioji';
         let model;
         let lastSpokenCategory = ""; 
         let barcodeCooldown = false;
 
-        // Visual Object Dictionary
-        const hachiojiRules = {
-            "bottle": {
-                color: "#3b82f6", scheduleId: "day-Sat",
-                ja: { category: "ペットボトル", text: "① キャップとラベルを必ず外す！\n② 中を軽くすすぐ。\n③ つぶして出す！" },
-                en: { category: "PET Bottles", text: "1. Remove cap and label!\n2. Rinse inside lightly.\n3. Crush to flatten!" }
+        // NEW RULES CONTAINER: City Matrices (Hachioji vs Shinjuku)
+        const cityDatabases = {
+            hachioji: {
+                "bottle": { color: "#3b82f6", scheduleId: "day-Sat", ja: { category: "ペットボトル", text: "① キャップとラベルを外す！\n② 中を軽くすすぐ。\n③ つぶして出す！" }, en: { category: "PET Bottles", text: "1. Remove cap and label!\n2. Rinse inside lightly.\n3. Crush to flatten!" } },
+                "can": { color: "#22c55e", scheduleId: "day-Fri", ja: { category: "空き缶", text: "① 中をすすぐ。軽くつぶす！\n② 黄色の回収容器へ直接出す。" }, en: { category: "Empty Cans", text: "1. Rinse inside and crush lightly!\n2. Discard directly into yellow bins." } },
+                "cup": { color: "#f97316", scheduleId: "day-Wed", ja: { category: "容器包装プラスチック", text: "① プラマークを確認。\n② 透明・半透明の袋に入れて出す。" }, en: { category: "Plastic Packaging", text: "1. Check for plastic mark.\n2. Put in transparent bags." } },
+                "banana": { color: "#ef4444", scheduleId: "day-Mon", ja: { category: "可燃ごみ", text: "① 八王子市指定の「緑色のゴミ袋」に入れます。\n② 水切りをしっかりする。" }, en: { category: "Burnable Waste", text: "1. Use Hachioji designated GREEN bags.\n2. Drain water completely." } }
             },
-            "can": {
-                color: "#22c55e", scheduleId: "day-Fri",
-                ja: { category: "空き缶", text: "① 中をサッとすすぐ。\n② 軽くつぶす！\n③ そのまま黄色の回収容器へ出す。" },
-                en: { category: "Empty Cans", text: "1. Rinse inside cleanly.\n2. Crush lightly!\n3. Put directly into yellow bins." }
-            },
-            "cup": {
-                color: "#f97316", scheduleId: "day-Wed",
-                ja: { category: "容器包装プラスチック", text: "① プラマークがあるか確認！\n② 洗って、透明・半透明の袋に入れて出す。" },
-                en: { category: "Plastic Packaging", text: "1. Check for plastic mark.\n2. Clean and put in transparent bags." }
-            },
-            "banana": { 
-                color: "#ef4444", scheduleId: "day-Mon",
-                ja: { category: "可燃ごみ（燃えるゴミ）", text: "① 八王子市指定の「緑色のゴミ袋」に入れます。\n② 水切りをしっかりしてください。" }, 
-                en: { category: "Burnable Waste", text: "1. Use Hachioji designated GREEN garbage bags.\n2. Drain water completely." } 
-            },
-            "scissors": { 
-                color: "#708090", scheduleId: "day-Tue",
-                ja: { category: "不燃ごみ（燃えないゴミ）", text: "① 八王子市指定の「橙色（オレンジ）のゴミ袋」に入れます。\n② 刃物は厚紙に包んで「キケン」と表記してください。" }, 
-                en: { category: "Non-Burnable Waste", text: "1. Use Hachioji designated ORANGE bags.\n2. Wrap blades and label 'キケン'." } 
+            shinjuku: {
+                "bottle": { color: "#3b82f6", scheduleId: "day-Fri", ja: { category: "資源（ペットボトル）", text: "① キャップとラベルは「プラスチック」へ！\n② 軽くすすいで、回収コンテナへ出す。" }, en: { category: "PET Bottles (Resource)", text: "1. Remove caps/labels (go to plastic group).\n2. Rinse lightly and place in container bins." } },
+                "can": { color: "#22c55e", scheduleId: "day-Fri", ja: { category: "資源（缶・びん）", text: "① 中をすすいで出す。\n② コンテナか、青い回収ネット袋へ入れる。" }, en: { category: "Cans & Glass (Resource)", text: "1. Rinse thoroughly inside.\n2. Put into blue net bags or containers." } },
+                "cup": { color: "#a855f7", scheduleId: "day-Wed", ja: { category: "プラスチック成形品", text: "① 新宿区では週1回水曜日に回収！\n② 汚れを落として、中身の見える袋へ入れる。" }, en: { category: "Plastic Products", text: "1. Collected every Wednesday in Shinjuku.\n2. Clean and discard in a see-through bag." } },
+                "banana": { color: "#ef4444", scheduleId: "day-Tue", ja: { category: "燃やすごみ", text: "① 新宿区は指定袋なし！(蓋つき容器か半透明袋でOK)\n② 火・木・土曜の週3回回収します。" }, en: { category: "Burnable Waste", text: "1. No designated bags required in Shinjuku!\n2. Collected 3 times a week (Tue, Thu, Sat)." } }
             }
         };
 
-        // NEW FEATURE DATA: Barcode Database Mapping (Common Japanese Store Products)
         const barcodeDatabase = {
-            "4902102072618": hachiojiRules["bottle"], // Coca Cola Japan Bottle Barcode
-            "4901777232570": hachiojiRules["bottle"], // Suntory Iyemon Green Tea Bottle
-            "4901411034638": hachiojiRules["can"],    // Kirin Barcode Can
-            "4902888224058": hachiojiRules["cup"]     // Plastic Snack Cup Pack
+            "4902102072618": "bottle",
+            "4901777232570": "bottle",
+            "4901411034638": "can",
+            "4902888224058": "cup"
         };
 
         const calLabels = {
-            ja: { title: "八王子市 収集スケジュール", Mon: "可燃", Tue: "不燃", Wed: "プラ", Thu: "可燃", Fri: "資源缶", Sat: "ペット" },
-            en: { title: "Hachioji Collection Schedule", Mon: "Burn", Tue: "Non-B", Wed: "Platc", Thu: "Burn", Fri: "Cans", Sat: "PET" }
+            hachioji: { ja: { title: "八王子市 スケジュール", Mon: "可燃", Tue: "不燃", Wed: "プラ", Thu: "可燃", Fri: "資源缶", Sat: "ペット" }, en: { title: "Hachioji Schedule", Mon: "Burn", Tue: "Non-B", Wed: "Platc", Thu: "Burn", Fri: "Cans", Sat: "PET" } },
+            shinjuku: { ja: { title: "新宿区 スケジュール", Mon: "古紙", Tue: "可燃", Wed: "プラ", Thu: "可燃", Fri: "資源缶", Sat: "可燃" }, en: { title: "Shinjuku Schedule", Mon: "Paper", Tue: "Burn", Wed: "Platc", Thu: "Burn", Fri: "Resrc", Sat: "Burn" } }
         };
 
         const defaultText = {
-            ja: { cat: "カメラにゴミまたはバーコードを映してください", inst: "ゴミをカメラで捉えるか、商品のバーコード線を近づけると自動解析します。" },
-            en: { cat: "Show trash or barcode", inst: "Hold any object or bring the barcode line close to the camera lens." }
+            ja: { cat: "カメラにゴミを映してください", inst: "ゴミを認識すると、選択した都市の分別ルールを表示します。" },
+            en: { cat: "Show trash to camera", inst: "When trash is scanned, rules for the active city will be loaded." }
         };
+
+        function changeCity() {
+            currentCity = citySelect.value;
+            updateCalendarUI();
+            resetUI();
+        }
 
         function setLanguage(lang) {
             currentLang = lang;
             document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
             if(event) event.target.classList.add('active');
-            
-            document.getElementById('calendar-title').innerText = calLabels[currentLang].title;
-            document.getElementById('txt-Mon').innerText = calLabels[currentLang].Mon;
-            document.getElementById('txt-Tue').innerText = calLabels[currentLang].Tue;
-            document.getElementById('txt-Wed').innerText = calLabels[currentLang].Wed;
-            document.getElementById('txt-Thu').innerText = calLabels[currentLang].Thu;
-            document.getElementById('txt-Fri').innerText = calLabels[currentLang].Fri;
-            document.getElementById('txt-Sat').innerText = calLabels[currentLang].Sat;
-
+            updateCalendarUI();
             resetUI();
+        }
+
+        function updateCalendarUI() {
+            const labels = calLabels[currentCity][currentLang];
+            document.getElementById('calendar-title').innerText = labels.title;
+            document.getElementById('txt-Mon').innerText = labels.Mon;
+            document.getElementById('txt-Tue').innerText = labels.Tue;
+            document.getElementById('txt-Wed').innerText = labels.Wed;
+            document.getElementById('txt-Thu').innerText = labels.Thu;
+            document.getElementById('txt-Fri').innerText = labels.Fri;
+            document.getElementById('txt-Sat').innerText = labels.Sat;
         }
 
         function resetUI() {
@@ -247,9 +236,7 @@
 
         async function setupWebcam() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { width: 640, height: 480 }, audio: false
-                });
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false });
                 video.srcObject = stream;
                 return new Promise((resolve) => { video.onloadedmetadata = () => { resolve(video); }; });
             } catch (error) {
@@ -265,18 +252,28 @@
             window.speechSynthesis.speak(msg);
         }
 
-        function displayRuleMatch(rule) {
+        function displayRuleMatch(objectClass) {
+            const cityData = cityDatabases[currentCity];
+            if (!cityData[objectClass]) return;
+            
+            const rule = cityData[objectClass];
             const langData = rule[currentLang];
+            
             categoryLabel.innerText = langData.category;
             categoryLabel.style.color = rule.color;
             instructionsLabel.innerText = langData.text;
             infoBox.style.borderColor = rule.color;
 
             document.querySelectorAll('.day-card').forEach(card => card.classList.remove('active-collection'));
+            
+            // Smart calendar highlighting matching city laws
             const targetedDay = document.getElementById(rule.scheduleId);
             if (targetedDay) targetedDay.classList.add('active-collection');
-            if (rule.scheduleId === "day-Mon") {
+            if (currentCity === 'hachioji' && rule.scheduleId === "day-Mon") {
                 document.getElementById("day-Thu").classList.add('active-collection');
+            } else if (currentCity === 'shinjuku' && rule.scheduleId === "day-Tue") {
+                document.getElementById("day-Thu").classList.add('active-collection');
+                document.getElementById("day-Sat").classList.add('active-collection');
             }
 
             if (lastSpokenCategory !== langData.category) {
@@ -293,39 +290,31 @@
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             
-            let detectedRule = null;
+            let detectedClass = null;
 
             predictions.forEach(prediction => {
-                if (hachiojiRules[prediction.class] && prediction.score > 0.55) {
-                    detectedRule = hachiojiRules[prediction.class];
+                if (cityDatabases[currentCity][prediction.class] && prediction.score > 0.55) {
+                    detectedClass = prediction.class;
                     const [x, y, width, height] = prediction.bbox;
-                    ctx.strokeStyle = detectedRule.color;
+                    ctx.strokeStyle = cityDatabases[currentCity][prediction.class].color;
                     ctx.lineWidth = 6;
                     ctx.strokeRect(x, y, width, height);
                 }
             });
 
-            // If object detected visually AND barcode isn't active
-            if (detectedRule && !barcodeCooldown) {
-                displayRuleMatch(detectedRule);
-            } else if (!detectedRule && predictions.length === 0 && !barcodeCooldown) {
+            if (detectedClass && !barcodeCooldown) {
+                displayRuleMatch(detectedClass);
+            } else if (!detectedClass && predictions.length === 0 && !barcodeCooldown) {
                 lastSpokenCategory = ""; 
             }
 
             requestAnimationFrame(detectFrame);
         }
 
-        // NEW INTERACTION: Initialize Quagga Barcode Scanning Engine
         function initBarcodeScanner() {
             Quagga.init({
-                inputStream: {
-                    name: "Live",
-                    type: "LiveStream",
-                    target: video
-                },
-                decoder: {
-                    readers: ["ean_reader", "ean_8_reader"] // standard Japanese JAN/EAN grocery codes
-                }
+                inputStream: { name: "Live", type: "LiveStream", target: video },
+                decoder: { readers: ["ean_reader", "ean_8_reader"] }
             }, function(err) {
                 if (err) return;
                 Quagga.start();
@@ -335,15 +324,11 @@
                 let code = data.codeResult.code;
                 if (barcodeDatabase[code] && !barcodeCooldown) {
                     barcodeCooldown = true;
-                    
-                    // Highlight barcode detection event
-                    barcodeAlert.innerText = `📦 Barcode Detected: ${code}`;
+                    barcodeAlert.innerText = `📦 Barcode: ${code}`;
                     barcodeAlert.style.display = "inline-block";
                     
-                    // Match barcode index map
                     displayRuleMatch(barcodeDatabase[code]);
 
-                    // Remove warning alert after 4 seconds
                     setTimeout(() => {
                         barcodeAlert.style.display = "none";
                         barcodeCooldown = false;
@@ -356,8 +341,9 @@
             try {
                 model = await cocoSsd.load();
                 statusLabel.style.display = 'none';
+                updateCalendarUI();
                 await setupWebcam();
-                initBarcodeScanner(); // fire scanner background threads
+                initBarcodeScanner();
                 detectFrame();
             } catch(e) {
                 statusLabel.innerText = "読み込み失敗";
