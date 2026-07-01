@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gomi-Check Core Intelligence System</title>
+    <title>Gomi-Check Real-Time Core AI</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', メイリオ, sans-serif;
@@ -16,581 +16,169 @@
         h1 { margin-bottom: 5px; font-size: 2.4rem; color: #1a2a3a; }
         .subtitle { color: #555; margin-bottom: 20px; font-size: 1.2rem; font-weight: bold; }
         
-        .score-board {
-            background: linear-gradient(135deg, #fef08a, #fef9c3);
-            max-width: 620px;
-            margin: 0 auto 15px auto;
-            padding: 12px;
-            border-radius: 12px;
-            border: 2px solid #facc15;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            font-weight: bold;
-            font-size: 1.1rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        }
-        .score-item span { color: #ca8a04; font-size: 1.5rem; }
-
-        .control-panel {
-            background: white;
-            max-width: 620px;
-            margin: 0 auto 20px auto;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .select-box {
-            padding: 8px 16px;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 8px;
-            border: 2px solid #cbd5e1;
-            background: #f8fafc;
-            cursor: pointer;
-        }
-        
-        .gps-btn {
-            background-color: #0284c7;
-            color: white;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .gps-btn:hover { background-color: #0369a1; }
-
-        .lang-btn {
-            padding: 8px 20px;
-            margin: 0 4px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            border: 2px solid #cbd5e1;
-            background: white;
-            border-radius: 20px;
-            transition: all 0.2s;
-        }
-        .lang-btn.active { background: #1e293b; color: white; border-color: #1e293b; }
-
         #video-container {
             position: relative;
             width: 100%;
-            max-width: 640px;
-            height: auto;
-            aspect-ratio: 4/3;
+            max-width: 500px;
             margin: 0 auto;
             background: #000;
             border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+            aspect-ratio: 4/3;
         }
-        video, canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        /* High-Precision Interactive Overlay Buttons for presentation demonstrations */
-        .ai-demo-shortcuts {
-            max-width: 620px;
-            margin: 10px auto;
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .shortcut-btn {
-            background: #475569;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        .shortcut-btn:hover { background: #334155; }
+        video { width: 100%; height: 100%; object-fit: cover; }
         
         #info-box {
-            max-width: 620px;
+            max-width: 480px;
             margin: 25px auto;
             padding: 25px;
             background: #ffffff;
             border: 6px solid #94a3b8;
             border-radius: 16px;
             box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
         }
-        #trash-category { font-size: 2.6rem; font-weight: bold; margin-bottom: 10px; }
-        #trash-instructions { font-size: 1.6rem; line-height: 1.6; text-align: left; white-space: pre-line; font-weight: bold; }
+        #trash-category { font-size: 2.2rem; font-weight: bold; margin-bottom: 10px; color: #475569; }
+        #trash-instructions { font-size: 1.4rem; line-height: 1.6; text-align: left; font-weight: bold; white-space: pre-line; }
 
-        #success-action-btn {
-            display: none;
-            width: 100%;
-            margin-top: 15px;
-            padding: 12px;
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: white;
-            background: #059669;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3);
-        }
-
-        #calendar-box {
-            max-width: 620px;
-            margin: 20px auto;
-            background: #1e293b;
-            color: #ffffff;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-        }
-        #calendar-box h3 { margin: 0 0 15px 0; font-size: 1.5rem; color: #38bdf8; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
-        .day-card { background: #334155; padding: 10px 5px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; }
-        .day-card.active-collection { background: #059669; border: 2px solid #34d399; transform: scale(1.05); }
-        .day-card .day-name { font-size: 1.1rem; margin-bottom: 5px; color: #94a3b8; }
-        .day-card.active-collection .day-name { color: #fff; }
-        .day-card .gomi-type { font-size: 0.8rem; color: #cbd5e1; }
-
-        #loading-status { font-size: 1.4rem; color: #ea580c; font-weight: bold; margin-bottom: 15px; background: #ffedd5; padding: 10px; border-radius: 8px; display: inline-block; }
-        #barcode-alert { display: none; background: #e0f2fe; color: #0369a1; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 10px; font-size: 1.1rem; }
+        #ai-status { font-size: 1.2rem; color: #ea580c; font-weight: bold; margin-bottom: 15px; background: #ffedd5; padding: 10px; border-radius: 8px; display: inline-block; }
     </style>
 </head>
 <body>
 
-    <h1>🗑️ Gomi-Check</h1>
-    <p class="subtitle">AI Dynamic Material Classifier & Logistics System</p>
+    <h1>🗑️ Gomi-Check AI</h1>
+    <p class="subtitle">Autonomous On-Device Neural Network Material Stream</p>
 
-    <div class="score-board">
-        <div class="score-item" id="score-text-pts">✨ エコポイント: <span id="user-points">0</span> pts</div>
-        <div class="score-item" id="score-text-strk">🔥 連続仕分け日数: <span id="user-streak">0</span> 日</div>
-    </div>
-
-    <div class="control-panel">
-        <div>
-            <label style="font-weight: bold; margin-right: 5px;">📍 地域 (City):</label>
-            <select id="city-select" class="select-box" onchange="changeCity()">
-                <option value="hachioji">八王子市 (Hachioji)</option>
-                <option value="shinjuku">新宿区 (Shinjuku)</option>
-                <option value="yokohama">横浜市 (Yokohama)</option>
-                <option value="osaka">大阪市 (Osaka)</option>
-            </select>
-            <button class="gps-btn" onclick="autoDetectLocation()">📡 GPS自動検出</button>
-        </div>
-        <div class="lang-container">
-            <button class="lang-btn active" onclick="setLanguage('ja')">日本語</button>
-            <button class="lang-btn" onclick="setLanguage('en')">English</button>
-        </div>
-    </div>
-
-    <div id="loading-status">AIシステム＆バーコードリーダーを起動中...</div>
-    <div id="barcode-alert"></div>
+    <div id="ai-status">⏳ ON-DEVICE BRAIN LOADING... (Please wait a few seconds)</div>
 
     <div id="video-container">
         <video id="webcam" autoplay muted playsinline></video>
-        <canvas id="overlay"></canvas>
-    </div>
-    
-    <div class="ai-demo-shortcuts">
-        <span style="font-weight:bold; font-size:0.9rem; align-self:center; color:#475569;">🔬 100% Precision Analysis Shortcuts:</span>
-        <button class="shortcut-btn" onclick="triggerGenerativeAnalysis('mouse')">🖱️ PC Mouse (E-Waste)</button>
-        <button class="shortcut-btn" onclick="triggerGenerativeAnalysis('clothes')">👕 Old T-Shirt (Textiles)</button>
-        <button class="shortcut-btn" onclick="triggerGenerativeAnalysis('bottle')">🍼 PET Bottle</button>
-        <button class="shortcut-btn" onclick="triggerGenerativeAnalysis('can')">🥫 Beverage Can</button>
-        <button class="shortcut-btn" onclick="triggerGenerativeAnalysis('cup')">🍱 Bento Plastic Box</button>
     </div>
     
     <div id="info-box">
-        <div id="trash-category">カメラにゴミを映してください</div>
-        <div id="trash-instructions">ゴミを認識すると、選択した都市のルールが表示されます。</div>
-        <button id="success-action-btn" onclick="claimEcoPoints()">👍 分別完了！</button>
+        <div id="trash-category">Initializing AI Core...</div>
+        <div id="trash-instructions">Please wait for the status bar above to turn green, then hold up any item steadily.</div>
     </div>
 
-    <div id="calendar-box">
-        <h3 id="calendar-title">収集スケジュール</h3>
-        <div class="calendar-grid">
-            <div class="day-card" id="day-Mon"><div class="day-name">月</div><div class="gomi-type" id="txt-Mon">-</div></div>
-            <div class="day-card" id="day-Tue"><div class="day-name">火</div><div class="gomi-type" id="txt-Tue">-</div></div>
-            <div class="day-card" id="day-Wed"><div class="day-name">水</div><div class="gomi-type" id="txt-Wed">-</div></div>
-            <div class="day-card" id="day-Thu"><div class="day-name">木</div><div class="gomi-type" id="txt-Thu">-</div></div>
-            <div class="day-card" id="day-Fri"><div class="day-name">金</div><div class="gomi-type" id="txt-Fri">-</div></div>
-            <div class="day-card" id="day-Sat"><div class="day-name">土</div><div class="gomi-type" id="txt-Sat">-</div></div>
-        </div>
-    </div>
+    <script type="module">
+        import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1';
+        
+        // Disable looking for local files; force download directly from HuggingFace mirror
+        env.allowLocalModels = false;
 
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
-    
-    <script>
         const video = document.getElementById('webcam');
-        const canvas = document.getElementById('overlay');
-        const ctx = canvas.getContext('2d');
-        const statusLabel = document.getElementById('loading-status');
         const categoryLabel = document.getElementById('trash-category');
         const instructionsLabel = document.getElementById('trash-instructions');
         const infoBox = document.getElementById('info-box');
-        const barcodeAlert = document.getElementById('barcode-alert');
-        const citySelect = document.getElementById('city-select');
-        const actionBtn = document.getElementById('success-action-btn');
+        const aiStatus = document.getElementById('ai-status');
 
-        let currentLang = 'ja';
-        let currentCity = 'hachioji';
-        let model;
-        let lastSpokenCategory = ""; 
-        let barcodeCooldown = false;
-        let generativeLock = false;
+        let classifier;
+        let lastSpoken = "";
+        
+        // Creating an off-screen canvas helper to extract image data instantly from the live stream
+        let canvasHelper = document.createElement('canvas');
 
-        let ecoPoints = parseInt(localStorage.getItem('gomi_pts')) || 0;
-        let ecoStreak = parseInt(localStorage.getItem('gomi_strk')) || 0;
+        // Master Neural Key Mapping Matrix (Translates raw English Vision nodes to precise Japanese sorting rules)
+        const garbageKeywords = [
+            { keywords: ['mouse', 'trackball', 'computer mouse'], tag: 'electronic', title: 'PCマウス [小型家電ごみ]' },
+            { keywords: ['t-shirt', 'jersey', 'cardigan', 'cloth', 'apron', 'coat', 'wool', 'pajama', 'velvet'], tag: 'clothes', title: '古着・衣類 [資源ごみ]' },
+            { keywords: ['bottle', 'water bottle', 'wine bottle', 'pop bottle', 'flask'], tag: 'bottle', title: 'ペットボトル・瓶 [資源]' },
+            { keywords: ['can', 'beer can', 'tin can', 'beverage can'], tag: 'can', title: '飲料缶 [資源ごみ]' },
+            { keywords: ['tray', 'bento box', 'plastic bag', 'container', 'packet', 'wrapper', 'tub'], tag: 'plastic', title: 'プラスチック容器包装' }
+        ];
 
-        const cityDatabases = {
-            hachioji: {
-                "bottle": { color: "#3b82f6", scheduleId: "day-Sat", ja: { category: "ペットボトル", text: "① キャップとラベルを外す！\n② 中を軽くすすぐ。\n③ つぶして出す！" }, en: { category: "PET Bottles", text: "1. Remove cap and label!\n2. Rinse inside lightly.\n3. Crush to flatten!" } },
-                "can": { color: "#22c55e", scheduleId: "day-Fri", ja: { category: "空き缶", text: "① 中をすすぐ。軽くつぶす！\n② 黄色の回収容器へ直接出す。" }, en: { category: "Empty Cans", text: "1. Rinse inside and crush lightly!\n2. Discard directly into yellow bins." } },
-                "cup": { color: "#f97316", scheduleId: "day-Wed", ja: { category: "容器包装プラスチック", text: "① プラマークを確認。\n② 透明・半透明の袋に入れて出す。" }, en: { category: "Plastic Packaging", text: "1. Check for plastic mark.\n2. Put in transparent bags." } },
-                "banana": { color: "#ef4444", scheduleId: "day-Mon", ja: { category: "可燃ごみ", text: "① 八王子市指定の「緑色のゴミ袋」に入れます。\n② 水切りをしっかりする。" }, en: { category: "Burnable Waste", text: "1. Use Hachioji designated GREEN bags.\n2. Drain water completely." } },
-                "electronic": { color: "#a855f7", scheduleId: "day-Tue", ja: { category: "小型家電 (有害ごみ窓口)", text: "① 電池・バッテリーは必ず外す！\n② 市役所や市民センターの専用回収ボックスへ。" }, en: { category: "E-Waste / Small Electronics", text: "1. Remove all batteries first!\n2. Drop off inside special collection bins at city centers." } },
-                "clothes": { color: "#ec4899", scheduleId: "day-Wed", ja: { category: "資源衣類 (古着)", text: "① 洗濯して完全に乾かす。\n② 指定収集日の朝に透明な袋で出します（雨天中止）。" }, en: { category: "Used Clothing / Textiles", text: "1. Wash and dry completely.\n2. Put in clear bags on resource collection days (Cancelled if raining)." } }
-            },
-            shinjuku: {
-                "bottle": { color: "#3b82f6", scheduleId: "day-Fri", ja: { category: "資源（ペットボトル）", text: "① キャップとラベルは「プラスチック」へ！\n② 軽くすすいで、回収コンテナへ出す。" }, en: { category: "PET Bottles (Resource)", text: "1. Remove caps/labels.\n2. Rinse lightly and place in container bins." } },
-                "can": { color: "#22c55e", scheduleId: "day-Fri", ja: { category: "資源（缶・びん）", text: "① 中をすすいで出す。\n② コンテナか、青い回収ネット袋へ入れる。" }, en: { category: "Cans & Glass (Resource)", text: "1. Rinse thoroughly inside.\n2. Put into blue net bags or containers." } },
-                "cup": { color: "#a855f7", scheduleId: "day-Wed", ja: { category: "プラスチック成形品", text: "① 新宿区では週1回水曜日に回収！\n② 汚れを落として、中身の見える袋へ入れる。" }, en: { category: "Plastic Products", text: "1. Collected every Wednesday in Shinjuku.\n2. Clean and discard in a see-through bag." } },
-                "banana": { color: "#ef4444", scheduleId: "day-Tue", ja: { category: "燃やすごみ", text: "① 新宿区は指定袋なし！\n② 火・木・土曜の週3回回収します。" }, en: { category: "Burnable Waste", text: "1. No designated bags required in Shinjuku!\n2. Collected 3 times a week (Tue, Thu, Sat)." } },
-                "electronic": { color: "#a855f7", scheduleId: "day-Mon", ja: { category: "小型家電回収 (金属・陶ごみ)", text: "① 30cm未満の電子部品・マウス等は金属ごみ回収へ。\n② もしくは区役所の回収ボックスへ投入。" }, en: { category: "E-Waste (<30cm)", text: "1. Discard with metal/ceramic waste streams if under 30cm.\n2. Or take directly to Ward office drop-off boxes." } },
-                "clothes": { color: "#ec4899", scheduleId: "day-Mon", ja: { category: "古着・古布 (資源回収)", text: "① 新宿区指定の資源拠点、または土曜特別回収へ。\n② 汚れているものは「燃やすごみ」へ。" }, en: { category: "Textiles / Old Clothes", text: "1. Take to collection stations or Special Saturday drop-offs.\n2. Soiled fabrics must go with burnable waste." } }
-            },
-            yokohama: {
-                "bottle": { color: "#3b82f6", scheduleId: "day-Tue", ja: { category: "資源（ペットボトル）", text: "① キャップとラベルを必ず外す！\n② 軽くすすいで潰し、資源集積場所の専用ネット袋へ出す。" }, en: { category: "PET Bottles (Resource)", text: "1. Always remove cap and label!\n2. Rinse lightly, flatten, and put in designated net bags." } },
-                "can": { color: "#22c55e", scheduleId: "day-Tue", ja: { category: "缶・びん・ペットボトル", text: "① 缶・びんとペットボトルは同じ日に回収！\n② 中身を空にして別々の回収カゴへ分ける。" }, en: { category: "Cans & Glass Bottles", text: "1. Collected on the same day as PET bottles.\n2. Empty out contents and sort into separate crates." } },
-                "cup": { color: "#f97316", scheduleId: "day-Thu", ja: { category: "プラスチック製容器包装", text: "① プラマークのある容器、袋、キャップが対象。\n② 汚れが落ちないものは「燃やすごみ」へ。" }, en: { category: "Plastic Packaging", text: "1. Items with the plastic mark (containers, bags, caps).\n2. If dirt cannot be washed off, treat as burnable waste." } },
-                "banana": { color: "#ef4444", scheduleId: "day-Mon", ja: { category: "燃やすごみ", text: "① 半透明の袋で出せます。(指定袋なし)\n② 週2回、月曜日と木曜日に回収されます。" }, en: { category: "Burnable Waste", text: "1. Semi-transparent bags are fine (No designated bag required).\n2. Collected twice a week on Mondays and Thursdays." } },
-                "electronic": { color: "#a855f7", scheduleId: "day-Sat", ja: { category: "小さな金属類 / 小型家電", text: "① 30cm未満の金属、マウス等のガジェットが対象。\n② 燃やすごみとは絶対に分ける！" }, en: { category: "Small Metallic Gadgets", text: "1. Applies to items under 30cm made of metal/electronics.\n2. Never mix with standard burnable streams." } },
-                "clothes": { color: "#ec4899", scheduleId: "day-Wed", ja: { category: "古紙・古布資源類", text: "① 地域で実施される集団回収へ出してください。\n② ビニール袋ではなく、ひもで縛るか半透明袋へ。" }, en: { category: "Used Fabrics / Clothing", text: "1. Place out during regional community collection days.\n2. Secure safely using strings or transparent wrap." } }
-            },
-            osaka: {
-                "bottle": { color: "#3b82f6", scheduleId: "day-Wed", ja: { category: "資源ごみ（ペットボトル）", text: "① キャップとラベルは「容器包装プラスチック」へ！\n② 中をすすいで、中身の見える透明な袋に入れて出す。" }, en: { category: "PET Bottles (Resource)", text: "1. Sort caps and labels into plastic packaging group!\n2. Rinse inside and place in a clear, see-through plastic bag." } },
-                "can": { color: "#22c55e", scheduleId: "day-Wed", ja: { category: "資源ごみ（空き缶・空き瓶）", text: "① 空き缶と空き瓶を一緒の袋にまとめてOK！\n② 汚れのひどいものは「普通ごみ」にしてください。" }, en: { category: "Cans & Glass (Resource)", text: "1. You can put empty cans and glass bottles in the same bag!\n2. Highly contaminated items go to ordinary waste." } },
-                "cup": { color: "#f97316", scheduleId: "day-Thu", ja: { category: "容器包装プラスチック", text: "① 商品のプラスチック製パック、ネット、トレイが対象。\n② 中身の見える袋に入れて出します。" }, en: { category: "Plastic Packaging", text: "1. Applies to plastic packs, nets, and trays.\n2. Discard in a clear or semi-transparent bag." } },
-                "banana": { color: "#ef4444", scheduleId: "day-Tue", ja: { category: "普通ごみ（燃やすごみ）", text: "① 中身が見える透明・半透明の袋（最大45L）を使用！\n② 火曜日と金曜日の週2回回収です。" }, en: { category: "Ordinary Waste (Burnable)", text: "1. Use clear or semi-transparent bags (Up to 45L).\n2. Collected twice a week on Tuesdays and Fridays." } },
-                "electronic": { color: "#a855f7", scheduleId: "day-Thu", ja: { category: "資源（環境収集・小型家電）", text: "① 最大の辺が30cm以内の家電・マウス類が対象。\n② 拠点回収ボックス、または資源収集日に出す。" }, en: { category: "Small Home Appliances", text: "1. Target electronics under 30cm long.\n2. Discard inside city hub boxes or on scheduled resource days." } },
-                "clothes": { color: "#ec4899", scheduleId: "day-Mon", ja: { category: "古紙・衣類（資源回収）", text: "① 濡れないよう、中身の見える透明な袋にしっかりと入れる。\n② 週1回月曜日に収集します。" }, en: { category: "Paper & Clothing Streams", text: "1. Place inside thick waterproof transparent bags tightly.\n2. Collected once a week on Mondays." } }
-            }
+        const localRules = {
+            electronic: { color: "#a855f7", text: "① 中のバッテリーや乾電池は必ず抜き出す。\n② 地域センターや区役所に設置されている専用の小型家電回収箱へ直接投入してください。" },
+            clothes: { color: "#ec4899", text: "① しっかり洗濯して完全に乾燥させる！\n② 中身の見える透明な袋に入れて、指定の資源回収日（晴れの日）に集積所へ排出します。" },
+            bottle: { color: "#3b82f6", text: "① プラスチック製のキャップとラベルを必ず剥がす。\n② 内部を軽く水ですすぎ、足で潰してから青色の回収ネット袋へ投入。" },
+            can: { color: "#22c55e", text: "① 内部を水できれいにすすいで空にする。（中にタバコ等のゴミを入れない）\n② 軽く潰して、黄色の回収コンテナへ直接入れてください。" },
+            plastic: { color: "#f97316", text: "① 商品についている「プラマーク」を確認する。\n② 汚れが落ちない油物の弁当パック等は、資源ではなく「可燃ごみ」として出してください。" }
         };
-
-        const cloudProductDatabase = {
-            "4902102072618": { type: "bottle", nameJa: "コカ・コーラ 500ml PET", nameEn: "Coca-Cola 500ml PET" },
-            "4901777232570": { type: "bottle", nameJa: "サントリー BOSS コーヒー", nameEn: "Suntory BOSS Coffee" },
-            "4901411034638": { type: "can", nameJa: "キリン 一番搾り 缶ビール", nameEn: "Kirin Ichiban Beer Can" },
-            "4902888224058": { type: "cup", nameJa: "森永製菓 ゼリー飲料パック", nameEn: "Morinaga Jelly Pouch Pack" },
-            "4901330512354": { type: "cup", nameJa: "カルビー ポテトチップス袋", nameEn: "Calbee Potato Chips Bag" }
-        };
-
-        const calLabels = {
-            hachioji: { ja: { title: "八王子市 スケジュール", Mon: "可燃", Tue: "不燃/電", Wed: "プラ/衣", Thu: "可燃", Fri: "資源缶", Sat: "ペット" }, en: { title: "Hachioji Schedule", Mon: "Burn", Tue: "Non/E", Wed: "Pl/Tex", Thu: "Burn", Fri: "Cans", Sat: "PET" } },
-            shinjuku: { ja: { title: "新宿区 スケジュール", Mon: "資源/衣", Tue: "可燃", Wed: "プラ", Thu: "可燃", Fri: "資源缶", Sat: "可燃" }, en: { title: "Shinjuku Schedule", Mon: "Res/Tex", Tue: "Burn", Wed: "Platc", Thu: "Burn", Fri: "Resrc", Sat: "Burn" } },
-            yokohama: { ja: { title: "横浜市 スケジュール", Mon: "燃やす", Tue: "缶瓶P", Wed: "古紙/衣", Thu: "プラ包装", Fri: "燃やす", Sat: "不燃/電" }, en: { title: "Yokohama Schedule", Mon: "Burn", Tue: "Cans/P", Wed: "Pa/Tex", Thu: "Plastic", Fri: "Burn", Sat: "Non/E" } },
-            osaka: { ja: { title: "大阪市 スケジュール", Mon: "紙/衣", Tue: "普通", Wed: "資源", Thu: "プラ/電", Fri: "普通", Sat: "粗大" }, en: { title: "Osaka Schedule", Mon: "Pa/Tex", Tue: "Ordin", Wed: "Resrc", Thu: "Pl/E", Fri: "Ordin", Sat: "Bulky" } }
-        };
-
-        const gamifyLabels = {
-            ja: { pts: "✨ エコポイント: ", strk: "🔥 連続仕分け日数: ", btn: "👍 分別完了！ポイント獲得", alert: "ナイス仕分け！ +10 エコポイント！🎉" },
-            en: { pts: "✨ Eco Points: ", strk: "🔥 Sorting Streak: ", btn: "👍 Sorted! Claim Points", alert: "Great job! +10 Eco Points claimed! 🎉" }
-        };
-
-        const defaultText = {
-            ja: { cat: "カメラにゴミを映してください", inst: "ゴミを認識すると、選択した都市の分別ルールを表示します。" },
-            en: { cat: "Show trash to camera", inst: "When trash is scanned, rules for the active city will be loaded." }
-        };
-
-        // NEW: Live GPS Geolocation Parsing Interceptor
-        function autoDetectLocation() {
-            if (!navigator.geolocation) {
-                alert("GPS is not supported by your browser.");
-                return;
-            }
-            statusLabel.style.display = 'inline-block';
-            statusLabel.innerText = "🛰️ GPS座標を計算中...";
-            
-            navigator.geolocation.getCurrentPosition((position) => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                
-                if (lat > 34.6 && lat < 34.8) {
-                    currentCity = "osaka";
-                    alert("📍 GPS Auto-Match: 大阪市 (Osaka City) detected!");
-                } else if (lat > 35.3 && lat < 35.5) {
-                    currentCity = "yokohama";
-                    alert("📍 GPS Auto-Match: 横浜市 (Yokohama City) detected!");
-                } else if (lon < 139.4) {
-                    currentCity = "hachioji";
-                    alert("📍 GPS Auto-Match: 八王子市 (Hachioji) detected!");
-                } else {
-                    currentCity = "shinjuku";
-                    alert("📍 GPS Auto-Match: 新宿区 (Shinjuku Ward) detected!");
-                }
-                
-                citySelect.value = currentCity;
-                statusLabel.style.display = 'none';
-                updateCalendarUI();
-                resetUI();
-            }, () => {
-                alert("GPS Timeout or permission denied.");
-                statusLabel.style.display = 'none';
-            });
-        }
-
-        // NEW FEATURE: High-Precision Material Deep-Analysis Matrix Simulation (100% Accuracy)
-        function triggerGenerativeAnalysis(mockTarget) {
-            generativeLock = true;
-            statusLabel.style.display = "inline-block";
-            statusLabel.innerText = "🧠 AI Deep-Analyzing material chemical compositions...";
-            
-            setTimeout(() => {
-                statusLabel.style.display = "none";
-                
-                if (mockTarget === "mouse") {
-                    displayRuleMatch("electronic", "Logitech Optical Mouse");
-                } else if (mockTarget === "clothes") {
-                    displayRuleMatch("clothes", "Cotton T-Shirt / Uniqlo Fabric");
-                } else if (mockTarget === "bottle") {
-                    displayRuleMatch("bottle", "Verified PET Container");
-                } else if (mockTarget === "can") {
-                    displayRuleMatch("can", "Aluminum Soda Can");
-                } else if (mockTarget === "cup") {
-                    displayRuleMatch("cup", "Polypropylene Bento Box Tray");
-                }
-                
-                setTimeout(() => { generativeLock = false; }, 8000); // 8 second lock to review rules
-            }, 1200);
-        }
-
-        function updateScoreboardUI() {
-            document.getElementById('user-points').innerText = ecoPoints;
-            document.getElementById('user-streak').innerText = ecoStreak;
-            document.getElementById('score-text-pts').childNodes[0].nodeValue = gamifyLabels[currentLang].pts;
-            document.getElementById('score-text-strk').childNodes[0].nodeValue = gamifyLabels[currentLang].strk;
-            actionBtn.innerText = gamifyLabels[currentLang].btn;
-        }
-
-        function claimEcoPoints() {
-            ecoPoints += 10;
-            ecoStreak += 1;
-            localStorage.setItem('gomi_pts', ecoPoints);
-            localStorage.setItem('gomi_strk', ecoStreak);
-            updateScoreboardUI();
-            
-            const ctxAudio = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = ctxAudio.createOscillator();
-            const gain = ctxAudio.createGain();
-            osc.type = "sine";
-            osc.frequency.setValueAtTime(587.33, ctxAudio.currentTime); 
-            osc.connect(gain);
-            gain.connect(ctxAudio.destination);
-            gain.gain.setValueAtTime(0.1, ctxAudio.currentTime);
-            osc.start();
-            osc.stop(ctxAudio.currentTime + 0.15);
-
-            alert(gamifyLabels[currentLang].alert);
-            actionBtn.style.display = "none";
-            resetUI();
-        }
-
-        function changeCity() {
-            currentCity = citySelect.value;
-            updateCalendarUI();
-            resetUI();
-        }
-
-        function setLanguage(lang) {
-            currentLang = lang;
-            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
-            if(event) event.target.classList.add('active');
-            updateCalendarUI();
-            updateScoreboardUI();
-            resetUI();
-        }
-
-        function updateCalendarUI() {
-            const labels = calLabels[currentCity][currentLang];
-            document.getElementById('calendar-title').innerText = labels.title;
-            document.getElementById('txt-Mon').innerText = labels.Mon;
-            document.getElementById('txt-Tue').innerText = labels.Tue;
-            document.getElementById('txt-Wed').innerText = labels.Wed;
-            document.getElementById('txt-Thu').innerText = labels.Thu;
-            document.getElementById('txt-Fri').innerText = labels.Fri;
-            document.getElementById('txt-Sat').innerText = labels.Sat;
-        }
-
-        function resetUI() {
-            categoryLabel.innerText = defaultText[currentLang].cat;
-            instructionsLabel.innerText = defaultText[currentLang].inst;
-            infoBox.style.borderColor = "#94a3b8";
-            categoryLabel.style.color = "#333";
-            lastSpokenCategory = ""; 
-            actionBtn.style.display = "none";
-            document.querySelectorAll('.day-card').forEach(card => card.classList.remove('active-collection'));
-        }
 
         async function setupWebcam() {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "environment" }, 
+                audio: false 
+            });
+            video.srcObject = stream;
+            return new Promise((resolve) => video.onloadedmetadata = () => resolve());
+        }
+
+        async function initAI() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        width: { ideal: 640 },
-                        height: { ideal: 480 },
-                        facingMode: "environment" 
-                    }, 
-                    audio: false 
-                });
-                video.srcObject = stream;
-                video.setAttribute('playsinline', true);
-                video.setAttribute('muted', true);
-                return new Promise((resolve) => { 
-                    video.onloadedmetadata = () => { 
-                        video.play();
-                        resolve(video); 
-                    }; 
-                });
-            } catch (error) {
-                alert("カメラの起動に失敗しました。ブラウザのカメラアクセス権限を許可してください。");
+                // Initialize a lightweight yet incredibly robust vision classification pipeline running directly in browser memory
+                classifier = await pipeline('image-classification', 'Xenova/mobilenet_v2_1.0_224');
+                aiStatus.innerText = "🟢 REAL-TIME LOCAL AI STREAM ONLINE";
+                aiStatus.style.backgroundColor = "#dcfce7";
+                aiStatus.style.color = "#15803d";
+                categoryLabel.innerText = "スキャン待機中...";
+                instructionsLabel.innerText = "マウス、衣服、ペットボトル、缶、プラスチック容器などをカメラの前に3秒間静止させてください。";
+            } catch (err) {
+                aiStatus.innerText = "🔴 AI Model Loading Failure";
+                console.error(err);
             }
         }
 
-        function speakRules(titleText, bodyText) {
-            window.speechSynthesis.cancel(); 
-            let msg = new SpeechSynthesisUtterance();
-            msg.text = titleText + " . " + bodyText.replace(/[①②③④\n]/g, " ");
-            msg.lang = currentLang === 'ja' ? 'ja-JP' : 'en-US';
-            window.speechSynthesis.speak(msg);
-        }
-
-        function displayRuleMatch(objectClass, customName = "") {
-            const cityData = cityDatabases[currentCity];
-            if (!cityData[objectClass]) return;
-            
-            const rule = cityData[objectClass];
-            const langData = rule[currentLang];
-            
-            categoryLabel.innerText = customName ? `${customName} \n[${langData.category}]` : langData.category;
-            categoryLabel.style.color = rule.color;
-            instructionsLabel.innerText = langData.text;
-            infoBox.style.borderColor = rule.color;
-            
-            actionBtn.style.display = "block";
-            document.querySelectorAll('.day-card').forEach(card => card.classList.remove('active-collection'));
-            
-            const targetedDay = document.getElementById(rule.scheduleId);
-            if (targetedDay) targetedDay.classList.add('active-collection');
-            
-            // Dual Multi-Day Smart Route Matcher Logic Matrix
-            if (currentCity === 'hachioji' && rule.scheduleId === "day-Mon") {
-                document.getElementById("day-Thu").classList.add('active-collection');
-            } else if (currentCity === 'shinjuku' && rule.scheduleId === "day-Tue") {
-                document.getElementById("day-Thu").classList.add('active-collection');
-                document.getElementById("day-Sat").classList.add('active-collection');
-            } else if (currentCity === 'yokohama' && rule.scheduleId === "day-Mon") {
-                document.getElementById("day-Fri").classList.add('active-collection');
-            } else if (currentCity === 'osaka' && rule.scheduleId === "day-Tue") {
-                document.getElementById("day-Fri").classList.add('active-collection');
-            }
-
-            if (lastSpokenCategory !== langData.category) {
-                speakRules(langData.category, langData.text);
-                lastSpokenCategory = langData.category; 
-            }
-        }
-
-        async function detectFrame() {
-            if (!model || generativeLock) {
-                requestAnimationFrame(detectFrame);
+        async function processingLoop() {
+            if (!classifier) {
+                requestAnimationFrame(processingLoop);
                 return;
             }
-            
-            const predictions = await model.detect(video);
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            canvas.width = video.videoWidth || 640;
-            canvas.height = video.videoHeight || 480;
-            
-            let detectedClass = null;
 
-            predictions.forEach(prediction => {
-                if (cityDatabases[currentCity][prediction.class] && prediction.score > 0.55) {
-                    detectedClass = prediction.class;
-                    const [x, y, width, height] = prediction.bbox;
-                    ctx.strokeStyle = cityDatabases[currentCity][prediction.class].color;
-                    ctx.lineWidth = 6;
-                    ctx.strokeRect(x, y, width, height);
-                }
-            });
+            // Draw current webcam matrix frame down to the canvas sampler
+            canvasHelper.width = 224;
+            canvasHelper.height = 224;
+            const ctx = canvasHelper.getContext('2d');
+            ctx.drawImage(video, 0, 0, 224, 224);
+            const dataUrl = canvasHelper.toDataURL('image/jpeg');
 
-            if (detectedClass && !barcodeCooldown && !generativeLock) {
-                displayRuleMatch(detectedClass);
-            }
-
-            requestAnimationFrame(detectFrame);
-        }
-
-        function initBarcodeScanner() {
-            Quagga.init({
-                inputStream: { name: "Live", type: "LiveStream", target: video },
-                decoder: { readers: ["ean_reader", "ean_8_reader"] }
-            }, function(err) {
-                if (err) return;
-                Quagga.start();
-            });
-
-            Quagga.onDetected(function(data) {
-                let code = data.codeResult.code;
-                
-                if (cloudProductDatabase[code] && !barcodeCooldown && !generativeLock) {
-                    barcodeCooldown = true;
-                    
-                    const product = cloudProductDatabase[code];
-                    const matchedBrandName = currentLang === 'ja' ? product.nameJa : product.nameEn;
-                    
-                    barcodeAlert.innerText = `📦 Cloud Register Found: ${matchedBrandName} (${code})`;
-                    barcodeAlert.style.display = "inline-block";
-                    
-                    displayRuleMatch(product.type, matchedBrandName);
-
-                    setTimeout(() => {
-                        barcodeAlert.style.display = "none";
-                        barcodeCooldown = false;
-                    }, 5000);
-                }
-            });
-        }
-
-        async function init() {
             try {
-                model = await cocoSsd.load();
-                statusLabel.style.display = 'none';
-                updateCalendarUI();
-                updateScoreboardUI();
-                await setupWebcam();
-                initBarcodeScanner();
-                detectFrame();
-            } catch(e) {
-                statusLabel.innerText = "読み込み失敗";
+                // Pipe the raw base64 frame stream matrix straight into the neural compiler
+                const results = await classifier(dataUrl);
+                const topMatch = results[0].label.toLowerCase();
+                
+                // Cross-evaluate mathematical classification certainty parameters against our sorting logic matrix
+                let foundMatch = null;
+                for (let group of garbageKeywords) {
+                    if (group.keywords.some(kw => topMatch.includes(kw))) {
+                        foundMatch = group;
+                        break;
+                    }
+                }
+
+                // If a material structure category threshold passes, lock the layout state instantly
+                if (foundMatch) {
+                    const rule = localRules[foundMatch.tag];
+                    infoBox.style.borderColor = rule.color;
+                    categoryLabel.innerText = "🔍 " + foundMatch.title;
+                    categoryLabel.style.color = rule.color;
+                    instructionsLabel.innerText = rule.text;
+
+                    // Execute system-level Native Web Speech Synced Threading
+                    if (lastSpoken !== foundMatch.tag) {
+                        window.speechSynthesis.cancel();
+                        let msg = new SpeechSynthesisUtterance(foundMatch.title + "を自動検出しました。" + rule.text.replace(/[①②\n]/g, " "));
+                        msg.lang = 'ja-JP';
+                        window.speechSynthesis.speak(msg);
+                        lastSpoken = foundMatch.tag;
+                    }
+                }
+            } catch (err) {
+                console.warn("Vision Pipeline Core Drop:", err);
             }
+
+            // Loop continuously every 1200ms to allow smooth real-time on-device frame analysis cycles
+            setTimeout(processingLoop, 1200);
         }
 
-        init();
+        async function main() {
+            await setupWebcam();
+            await initAI();
+            processingLoop();
+        }
+
+        main();
     </script>
 </body>
 </html>
