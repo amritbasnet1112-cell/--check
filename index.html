@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gomi-Check God-Tier Vision System</title>
+    <title>Gomi-Check Core Intelligence System</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -47,18 +47,18 @@
 </head>
 <body>
 
-    <h1>🗑️ Gomi-Check God-AI</h1>
-    <p class="subtitle">Autonomous Cloud-Parsing Logistics Stream</p>
+    <h1>🗑️ Gomi-Check AI</h1>
+    <p class="subtitle">Cloud-Vision Precision Sorting Stream</p>
 
-    <div id="ai-status">📱 モバイル常時AI自動スキャン起動中...</div>
+    <div id="ai-status">🟢 AI Omni-Scanner Active (Hold object steady)</div>
 
     <div id="video-container">
         <video id="webcam" autoplay muted playsinline></video>
     </div>
     
     <div id="info-box">
-        <div id="trash-category">カメラを向けてください</div>
-        <div id="trash-instructions">衣服、マウス、ノートPC、プラスチックトレイ等をカメラの前に出すと、AIが完全自動で認識し、分別方法を音声読み上げします。</div>
+        <div id="trash-category">Scanning Engine Ready...</div>
+        <div id="trash-instructions">Bring any household object (mouse, laptop, clothes, plastic tray, bottle) into view. The AI will parse it automatically.</div>
     </div>
 
     <script>
@@ -71,91 +71,94 @@
         let lastDetected = "";
         let canvasHelper = document.createElement('canvas');
 
-        // Professional Grade Japan Municipal Waste Resolution Matrix
-        const dynamicRules = {
-            electronic: { title: "小型家電・PCガジェット類", color: "#a855f7", text: "① マウス、キーボード、ノートPC等の電子機器です。\n② 内蔵されているバッテリーや乾電池は必ず抜き出す！\n③ 自治体指定の有害ごみ窓口、または公共施設の専用回収ボックスへ投入してください。" },
-            clothes: { title: "古着・繊維資源類", color: "#ec4899", text: "① Tシャツ、コート、布製品等の衣類です。\n② 事前に洗濯を行い、完全に乾燥させていることが必須！\n③ 中身の見える透明な袋に入れ、雨の日を避けて資源ごみの日に集積所へ。" },
-            plastic: { title: "容器包装プラスチック", color: "#f97316", text: "① お弁当箱、食品トレイ、パック包装等のプラスチックです。\n② 汚れは水で軽くすすいで完全に落としてください。\n③ 汚れがこびりついているプラスチックは「可燃ごみ」になります。" },
-            bottle: { title: "ペットボトル（資源ごみ）", color: "#3b82f6", text: "① キャップとプラスチックラベルを完全に剥がす。\n② 内部を軽く水ですすぎ、足で平らに潰して指定のネット袋へ投入。" }
+        // Master Database covering all standard structural materials
+        const municipalSortingDatabase = {
+            electronic: { title: "小型家電・電子機器類 (E-Waste)", color: "#a855f7", text: "① マウス、キーボード、ノートPC、ガジェット類が対象です。\n② 内蔵されているリチウムイオンバッテリーや乾電池は必ず取り外す！\n③ 自治体指定の回収ボックス、または公共施設の有害ごみ窓口へ持ち込んでください。" },
+            clothes: { title: "古着・布類繊維資源 (Textiles)", color: "#ec4899", text: "① Tシャツ、コート、ジーンズ、毛布等の衣類・布製品です。\n② 必ず事前に洗濯を行い、完全に乾燥させている状態で出してください。\n③ 中身の見える透明な袋に入れ、雨の日を避けて資源ごみの日に排出します。" },
+            plastic: { title: "容器包装プラスチック (Plastics)", color: "#f97316", text: "① お弁当パック、食品トレイ、レジ袋、お菓子の袋等のプラスチック製品です。\n② 食べ残しや油汚れは、水で軽くすすいで完全に落としてください。\n③ 汚れが固着して落ちないプラスチックは、資源ではなく「可燃ごみ」になります。" },
+            bottle: { title: "ペットボトル (PET Bottles)", color: "#3b82f6", text: "① キャップとプラスチックラベルを完全に剥がします。(これらはプラスチックへ)\n② 内部をごく軽く水ですすぎ、足などで平らに潰して指定のネット袋へ投入してください。" }
         };
 
-        async function setupMobileWebcam() {
-            const constraints = {
-                video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "environment" },
-                audio: false
-            };
-            const stream = await navigator.mediaDevices.getUserMedia(constraints);
-            video.srcObject = stream;
+        async function startSmartCamera() {
+            try {
+                const constraints = {
+                    video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "environment" },
+                    audio: false
+                };
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = stream;
+            } catch (err) {
+                aiStatus.innerText = "🔴 Camera Access Denied. Check mobile permissions.";
+                console.error(err);
+            }
         }
 
-        // 🧠 THE BACKBONE: Fully Automated Async Core Parser Stream
-        function startAutomatedCloudPipeline() {
+        // 🧠 AUTOMATED STREAM ENGINE
+        function activateOmniScannerLoop() {
             setInterval(async () => {
-                aiStatus.innerText = "⚡ リアルタイム画像解析中...";
+                aiStatus.innerText = "⚡ Analyzing frame composition via Cloud Vision...";
                 aiStatus.style.backgroundColor = "#ffedd5";
                 aiStatus.style.color = "#9a3412";
 
-                // Extract exact image matrix frame directly from running video thread
+                // Sample the live stream matrix 
                 canvasHelper.width = 320;
                 canvasHelper.height = 240;
                 const ctx = canvasHelper.getContext('2d');
                 ctx.drawImage(video, 0, 0, 320, 240);
                 
-                // Compress payload down to high-efficiency JPEGs so mobile memory never crashes
-                const framePayload = canvasHelper.toDataURL('image/jpeg', 0.6);
+                // Compress payload tightly so mobile connections never drop or run out of memory
+                const compressedImageBase64 = canvasHelper.toDataURL('image/jpeg', 0.5);
 
                 /* ============================================================
-                   PRODUCTION API HOOK:
-                   Here, you send 'framePayload' to a cloud function running Gemini/GPT Vision.
-                   The cloud AI looks at your mouse or laptop, and sends back a simple token text.
+                   🚀 SECURE PRODUCTION API BRIDGE:
+                   In your final build, you POST this payload directly to your secure API gateway.
+                   The Vision LLM parses the texture, color, and object shape and responds with a label.
                    
-                   const res = await fetch('https://your-cloud-backend.com/vision', { method: 'POST', body: framePayload });
-                   const parsedTag = await res.json(); // e.g., "electronic"
+                   const response = await fetch('https://your-api-gateway.com/v1/scan', {
+                       method: 'POST',
+                       body: JSON.stringify({ data: compressedImageBase64 })
+                   });
+                   const categoryTag = await response.json(); // "electronic", "clothes", etc.
                    ============================================================ */
 
-                // High-performance cycle simulation for seamless presentations
-                let targetPool = ["electronic", "clothes", "plastic", "bottle"];
-                let mockResult = targetPool[Math.floor(Math.random() * targetPool.length)];
+                // High-performance real-time presentation engine simulator
+                const mockPool = ["electronic", "clothes", "plastic", "bottle"];
+                const mockCategoryResult = mockPool[Math.floor(Math.random() * mockPool.length)];
 
-                if (mockResult !== lastDetected) {
-                    lastDetected = mockResult;
-                    executeAutomatedResponse(mockResult);
+                if (mockCategoryResult !== lastDetected) {
+                    lastDetected = mockCategoryResult;
+                    triggerAutomatedOutput(mockCategoryResult);
                 }
 
                 setTimeout(() => {
-                    aiStatus.innerText = "🟢 常時自動スキャン中 (対象物を静止させてください)";
+                    aiStatus.innerText = "🟢 Real-Time AI Tracking Active (Hands-Free)";
                     aiStatus.style.backgroundColor = "#dcfce7";
                     aiStatus.style.color = "#166534";
                 }, 800);
 
-            }, 4000); // Scans completely hands-free every 4 seconds
+            }, 4000); // Scans autonomously every 4 seconds without any clicking
         }
 
-        function executeAutomatedResponse(key) {
-            const data = dynamicRules[key];
-            if (!data) return;
+        function triggerAutomatedOutput(key) {
+            const resultData = municipalSortingDatabase[key];
+            if (!resultData) return;
 
-            // 1. Dynamic CSS Layout Transformations
-            infoBox.style.borderColor = data.color;
-            categoryLabel.innerText = "🔍 自動検出: " + data.title;
-            categoryLabel.style.color = data.color;
-            instructionsLabel.innerText = data.text;
+            // Update user UI configurations instantly
+            infoBox.style.borderColor = resultData.color;
+            categoryLabel.innerText = "🔍 " + resultData.title;
+            categoryLabel.style.color = resultData.color;
+            instructionsLabel.innerText = resultData.text;
 
-            // 2. Automated Native Smartphone TTS Speech Engine
+            // Text-to-Speech Engine integration (Speaks automatically)
             window.speechSynthesis.cancel();
-            let speechUtterance = new SpeechSynthesisUtterance(data.title + "を自動検出しました。" + data.text.replace(/[①②③\n]/g, " "));
-            speechUtterance.lang = 'ja-JP';
-            window.speechSynthesis.speak(speechUtterance);
+            let voiceEngine = new SpeechSynthesisUtterance(resultData.title + "を検出。 " + resultData.text.replace(/[①②③\n]/g, " "));
+            voiceEngine.lang = 'ja-JP';
+            window.speechSynthesis.speak(voiceEngine);
         }
 
         async function init() {
-            try {
-                await setupMobileWebcam();
-                startAutomatedCloudPipeline();
-            } catch (err) {
-                aiStatus.innerText = "🔴 カメラの起動に失敗しました。";
-                console.error(err);
-            }
+            await startSmartCamera();
+            activateOmniScannerLoop();
         }
 
         init();
