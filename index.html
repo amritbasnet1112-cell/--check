@@ -61,12 +61,9 @@
         <div id="trash-instructions">Please wait for the status bar above to turn green, then hold up any item steadily.</div>
     </div>
 
-    <script type="module">
-        import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1';
-        
-        // Disable looking for local files; force download directly from HuggingFace mirror
-        env.allowLocalModels = false;
+    <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1/dist/transformers.min.js"></script>
 
+    <script>
         const video = document.getElementById('webcam');
         const categoryLabel = document.getElementById('trash-category');
         const instructionsLabel = document.getElementById('trash-instructions');
@@ -75,22 +72,20 @@
 
         let classifier;
         let lastSpoken = "";
-        
-        // Creating an off-screen canvas helper to extract image data instantly from the live stream
         let canvasHelper = document.createElement('canvas');
 
-        // Master Neural Key Mapping Matrix (Translates raw English Vision nodes to precise Japanese sorting rules)
+        // Master Classification Keywords Grid Mapping Vector
         const garbageKeywords = [
             { keywords: ['mouse', 'trackball', 'computer mouse'], tag: 'electronic', title: 'PCマウス [小型家電ごみ]' },
-            { keywords: ['t-shirt', 'jersey', 'cardigan', 'cloth', 'apron', 'coat', 'wool', 'pajama', 'velvet'], tag: 'clothes', title: '古着・衣類 [資源ごみ]' },
+            { keywords: ['t-shirt', 'jersey', 'cardigan', 'cloth', 'apron', 'coat', 'wool', 'pajama', 'velvet', 'suit'], tag: 'clothes', title: '古着・衣類 [資源ごみ]' },
             { keywords: ['bottle', 'water bottle', 'wine bottle', 'pop bottle', 'flask'], tag: 'bottle', title: 'ペットボトル・瓶 [資源]' },
             { keywords: ['can', 'beer can', 'tin can', 'beverage can'], tag: 'can', title: '飲料缶 [資源ごみ]' },
-            { keywords: ['tray', 'bento box', 'plastic bag', 'container', 'packet', 'wrapper', 'tub'], tag: 'plastic', title: 'プラスチック容器包装' }
+            { keywords: ['tray', 'bento box', 'plastic bag', 'container', 'packet', 'wrapper', 'tub', 'dish'], tag: 'plastic', title: 'プラスチック容器包装' }
         ];
 
         const localRules = {
             electronic: { color: "#a855f7", text: "① 中のバッテリーや乾電池は必ず抜き出す。\n② 地域センターや区役所に設置されている専用の小型家電回収箱へ直接投入してください。" },
-            clothes: { color: "#ec4899", text: "① しっかり洗濯して完全に乾燥させる！\n② 中身の見える透明な袋に入れて、指定の資源回収日（晴れの日）に集積所へ排出します。" },
+            clothes: { color: "#ec4899", text: "① しっかり洗濯して完全に乾燥させる！\n② 透明な袋に入れて、指定の資源回収日（晴れの日）に集積所へ排出します。" },
             bottle: { color: "#3b82f6", text: "① プラスチック製のキャップとラベルを必ず剥がす。\n② 内部を軽く水ですすぎ、足で潰してから青色の回収ネット袋へ投入。" },
             can: { color: "#22c55e", text: "① 内部を水できれいにすすいで空にする。（中にタバコ等のゴミを入れない）\n② 軽く潰して、黄色の回収コンテナへ直接入れてください。" },
             plastic: { color: "#f97316", text: "① 商品についている「プラマーク」を確認する。\n② 汚れが落ちない油物の弁当パック等は、資源ではなく「可燃ごみ」として出してください。" }
@@ -107,26 +102,30 @@
 
         async function initAI() {
             try {
-                // Initialize a lightweight yet incredibly robust vision classification pipeline running directly in browser memory
-                classifier = await pipeline('image-classification', 'Xenova/mobilenet_v2_1.0_224');
+                // Point environment parameters directly towards the model directory cache target
+                transformers.env.allowLocalModels = false;
+                
+                // Mount the global image classifier stream array module pipeline
+                classifier = await transformers.pipeline('image-classification', 'Xenova/mobilenet_v2_1.0_224');
+                
                 aiStatus.innerText = "🟢 REAL-TIME LOCAL AI STREAM ONLINE";
                 aiStatus.style.backgroundColor = "#dcfce7";
                 aiStatus.style.color = "#15803d";
                 categoryLabel.innerText = "スキャン待機中...";
-                instructionsLabel.innerText = "マウス、衣服、ペットボトル、缶、プラスチック容器などをカメラの前に3秒間静止させてください。";
+                instructionsLabel.innerText = "マウス、衣服、ペットボトルなどをカメラの前に3秒間静止させてください。";
             } catch (err) {
-                aiStatus.innerText = "🔴 AI Model Loading Failure";
-                console.error(err);
+                aiStatus.innerText = "🔴 AI Model Loading Failure (Please reload or check console)";
+                console.error("Initialization Pipeline Blockage:", err);
             }
         }
 
         async function processingLoop() {
             if (!classifier) {
-                requestAnimationFrame(processingLoop);
+                setTimeout(processingLoop, 500);
                 return;
             }
 
-            // Draw current webcam matrix frame down to the canvas sampler
+            // Downscale running live video matrices into standard 224x224 tensor blocks
             canvasHelper.width = 224;
             canvasHelper.height = 224;
             const ctx = canvasHelper.getContext('2d');
@@ -134,11 +133,9 @@
             const dataUrl = canvasHelper.toDataURL('image/jpeg');
 
             try {
-                // Pipe the raw base64 frame stream matrix straight into the neural compiler
                 const results = await classifier(dataUrl);
                 const topMatch = results[0].label.toLowerCase();
                 
-                // Cross-evaluate mathematical classification certainty parameters against our sorting logic matrix
                 let foundMatch = null;
                 for (let group of garbageKeywords) {
                     if (group.keywords.some(kw => topMatch.includes(kw))) {
@@ -147,7 +144,6 @@
                     }
                 }
 
-                // If a material structure category threshold passes, lock the layout state instantly
                 if (foundMatch) {
                     const rule = localRules[foundMatch.tag];
                     infoBox.style.borderColor = rule.color;
@@ -155,7 +151,7 @@
                     categoryLabel.style.color = rule.color;
                     instructionsLabel.innerText = rule.text;
 
-                    // Execute system-level Native Web Speech Synced Threading
+                    // Trigger non-blocking text to speech loop
                     if (lastSpoken !== foundMatch.tag) {
                         window.speechSynthesis.cancel();
                         let msg = new SpeechSynthesisUtterance(foundMatch.title + "を自動検出しました。" + rule.text.replace(/[①②\n]/g, " "));
@@ -165,17 +161,21 @@
                     }
                 }
             } catch (err) {
-                console.warn("Vision Pipeline Core Drop:", err);
+                console.warn("Frame Processing Skipped:", err);
             }
 
-            // Loop continuously every 1200ms to allow smooth real-time on-device frame analysis cycles
+            // Sample webcam input stream frame buffer safely every 1.2 seconds
             setTimeout(processingLoop, 1200);
         }
 
         async function main() {
-            await setupWebcam();
-            await initAI();
-            processingLoop();
+            try {
+                await setupWebcam();
+                await initAI();
+                processingLoop();
+            } catch (e) {
+                console.error("Application Initialization Error:", e);
+            }
         }
 
         main();
